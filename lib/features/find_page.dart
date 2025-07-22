@@ -26,13 +26,11 @@ class _ChatPageState extends State<ChatFindPage> {
   }
 
   Future<void> _loadConversationHistory() async {
-    print("get----------------------");
     print(_userId);
     try {
       final conversations = await _difyService.getConversations(
         userId: _userId,
       );
-      print('conversationnnnnn------------------------ ${conversations}');
 
       if (conversations.isNotEmpty) {
         print("converation is not empty 👌🏻👌🏻👌🏻");
@@ -41,9 +39,6 @@ class _ChatPageState extends State<ChatFindPage> {
           conversationId: _conversationId,
           userId: _userId,
         );
-
-        print(history[0]);
-        print(history[history.length - 1]);
 
         setState(() {
           _messages = history.expand((msg) {
@@ -98,10 +93,6 @@ class _ChatPageState extends State<ChatFindPage> {
         userId: _userId,
         conversationId: _conversationId,
         responseMode: 'blocking',
-      );
-
-      print(
-        "responssssssssss-------------------------- ${response['metadata']}",
       );
 
       setState(() {

@@ -26,7 +26,6 @@ class _ChatPageState extends State<ChatMealPage> {
   }
 
   Future<void> _loadConversationHistory() async {
-    print("get----------------------");
     try {
       final conversations = await _difyService.getConversations(
         userId: "flutter_1a9e513e-da96-4f7b-bbea-350243d7a82a",
@@ -36,12 +35,9 @@ class _ChatPageState extends State<ChatMealPage> {
         print("converation is not empty 👌🏻👌🏻👌🏻");
         // _conversationId = conversations.first['id'];
         final history = await _difyService.getConversationHistory(
-          conversationId: "80e872dc-4684-44ed-ab65-5300cdd0db3b",
-          userId: "flutter_1a9e513e-da96-4f7b-bbea-350243d7a82a",
+          conversationId: _conversationId,
+          userId: _userId,
         );
-
-        print(history[0]);
-        print(history[0]['agent_thoughts']);
 
         setState(() {
           _messages = history.expand((msg) {

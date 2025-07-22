@@ -48,14 +48,6 @@ class DifyService {
     'Content-Type': 'application/json',
   };
 
-  Future<File> loadFileFromAssets(String assetName) async {
-    final byteData = await rootBundle.load(assetName);
-    final tempDir = await getTemporaryDirectory();
-    final file = File('${tempDir.path}/$assetName');
-    await file.writeAsBytes(byteData.buffer.asUint8List());
-    return file;
-  }
-
   // Send a chat message
   Future<Map<String, dynamic>> sendChatMessage({
     required String message,
@@ -69,10 +61,6 @@ class DifyService {
 
     try {
       final url = Uri.parse('$_baseUrl/chat-messages');
-      final file = await loadFileFromAssets('text.txt');
-
-      final bytes = await file.readAsBytes();
-      final base64File = base64Encode(bytes);
       final body = {
         'inputs': isBlockingMode
             ? {} // ถ้าเป็น blocking ส่ง inputs ว่าง
