@@ -3,6 +3,8 @@
 .packages
 .pub-cache/
 build/
+pubspec.log
+
 
 # Flutter-specific
 .flutter-plugins
@@ -15,9 +17,7 @@ generated_plugin_registrant.dart
 android/.gradle/
 android/.idea/
 android/local.properties
-android/app/debug
-android/app/profile
-android/app/release
+android/.idea
 
 # iOS
 ios/Flutter/.last_build_id
@@ -63,6 +63,9 @@ web/build/
 *.tmp
 *.lock
 *.DS_Store
+.idea
+.vscode
+.gradle
 
 
 .env

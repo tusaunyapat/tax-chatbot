@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class LandingPage extends StatefulWidget {
+class HomePage extends StatefulWidget {
   @override
-  _LandingPageState createState() => _LandingPageState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _LandingPageState extends State<LandingPage>
+class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Offset> _slideAnimation;
@@ -31,6 +31,9 @@ class _LandingPageState extends State<LandingPage>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
     _controller.forward();
+    Future.delayed(Duration(seconds: 3), () {
+      Navigator.pushReplacementNamed(context, '/home');
+    });
   }
 
   @override
@@ -86,38 +89,6 @@ class _LandingPageState extends State<LandingPage>
                   style: TextStyle(fontSize: 18, color: Colors.white70),
                 ),
                 const SizedBox(height: 40),
-
-                /// 🌟 Animated Button
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/find');
-                      },
-                      icon: Icon(Icons.login_rounded, size: 24),
-                      label: Text("Let's Start"),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 40,
-                          vertical: 18,
-                        ),
-                        backgroundColor: Colors.white,
-                        foregroundColor: Color(0xFF4A00E0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        textStyle: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        elevation: 10,
-                        shadowColor: Colors.black54,
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),

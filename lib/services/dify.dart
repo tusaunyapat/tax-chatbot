@@ -134,9 +134,7 @@ class DifyService {
                 final jsonData = jsonDecode(jsonLine);
                 if (jsonData['event'] == 'agent_message' &&
                     jsonData.containsKey('answer')) {
-                  // ต่อคำตอบทีละ chunk
                   answer += jsonData['answer'];
-                  // print('Current answer: $answer');
                 }
               } catch (e) {
                 print('Failed to decode SSE line: $jsonLine\nError: $e');
@@ -145,7 +143,6 @@ class DifyService {
           }
         }
 
-        // Return the last data chunk received as the full response
         return {'answer': answer};
       }
     } catch (e) {
@@ -161,6 +158,7 @@ class DifyService {
     int limit = 20,
   }) async {
     try {
+      print(conversationId);
       final url = Uri.parse('$_baseUrl/messages').replace(
         queryParameters: {
           'conversation_id': conversationId,
@@ -218,7 +216,7 @@ class DifyService {
     }
   }
 
-  Future<Map<String, dynamic>> getWelcomeMessage() async {
+  Future<Map<String, dynamic>> getParameters() async {
     try {
       final url = Uri.parse('${_baseUrl}/parameters');
 
@@ -226,9 +224,9 @@ class DifyService {
       final response = await http.get(url, headers: _headersBlocking);
       print('📥 Response status: ${response.statusCode}');
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final Map<String, dynamic> data = jsonDecode(response.body);
         print("parameters pass 200");
-        return Map<String, dynamic>.from(data['opening_statement'] ?? []);
+        return data;
       } else {
         throw Exception('API Error: ${response.statusCode} - ${response.body}');
       }

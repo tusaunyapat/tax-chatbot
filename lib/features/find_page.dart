@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:dify_test/services/dify.dart';
+import 'package:taxdul/services/dify.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:provider/provider.dart';
+import 'package:taxdul/provider/MemoManager.dart';
 
 class ChatFindPage extends StatefulWidget {
+  final String? conversationId;
+  final String? title;
+
+  ChatFindPage({required this.conversationId, required this.title});
+
   @override
   _ChatPageState createState() => _ChatPageState();
 }
@@ -12,59 +22,114 @@ class _ChatPageState extends State<ChatFindPage> {
   final DifyService _difyService = DifyService();
 
   List<ChatMessage> _messages = [];
+  List<String> _memos = []; // เก็บ list memo ใน state
   bool _isLoading = false;
-  final String _conversationId = "ddfbbb47-f32f-40ac-a085-d3419b870735";
-  // final String _userId = DifyService().generateUserId();
-  final String _userId = "flutter_cfe6695b-1a8e-4eae-97a9-426859ebddd5";
+  String _conversationId = "";
+  String _userId = "";
 
   @override
   void initState() {
     super.initState();
-    _loadConversationHistory();
-    print("start user id ${_userId} conversation id = ${_conversationId}");
-    // _testConnection();
+    _initializeUser();
+    _loadMemos(); // โหลดเมโมตอนเริ่ม
+  }
+
+  Future<void> _initializeUser() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    String? storedUserId = prefs.getString('user_id');
+    if (storedUserId == null) {
+      storedUserId = _difyService.generateUserId();
+      await prefs.setString('user_id', storedUserId);
+      print('🆕 Stored new user_id: $storedUserId');
+    }
+
+    setState(() {
+      _userId = storedUserId!;
+      _conversationId = widget.conversationId ?? "";
+    });
+
+    if (widget.conversationId != "") {
+      _loadConversationHistory();
+    }
+    _getParameters();
+  }
+
+  Future<void> _loadMemos() async {
+    final prefs = await SharedPreferences.getInstance();
+    final memos = prefs.getStringList("memos") ?? [];
+    setState(() {
+      _memos = memos;
+    });
+  }
+
+  Future<void> _addMemo(String message) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _memos.add(message);
+    });
+    await prefs.setStringList("memos", _memos);
+    print("add memo $message");
+  }
+
+  Future<void> _removeMemo(String message) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _memos.remove(message);
+    });
+    await prefs.setStringList("memos", _memos);
+    print("remove memo $message");
+  }
+
+  Future<void> _getParameters() async {
+    try {
+      final Map<String, dynamic> parameters = await _difyService
+          .getParameters();
+      setState(() {
+        _messages.add(
+          ChatMessage(
+            message: parameters['opening_statement'].toString().trim(),
+            isUser: false,
+            timestamp: DateTime.now(),
+          ),
+        );
+      });
+    } catch (e) {
+      print('Error loading welcome message: $e');
+    }
   }
 
   Future<void> _loadConversationHistory() async {
-    print(_userId);
     try {
-      final conversations = await _difyService.getConversations(
+      final history = await _difyService.getConversationHistory(
+        conversationId: _conversationId,
         userId: _userId,
       );
 
-      if (conversations.isNotEmpty) {
-        print("converation is not empty 👌🏻👌🏻👌🏻");
-        // _conversationId = conversations.first['id'];
-        final history = await _difyService.getConversationHistory(
-          conversationId: _conversationId,
-          userId: _userId,
-        );
+      setState(() {
+        _messages = history.expand((msg) {
+          final timestamp = DateTime.fromMillisecondsSinceEpoch(
+            (msg['created_at'] ?? 0) * 1000,
+          );
 
-        setState(() {
-          _messages = history.expand((msg) {
-            final timestamp = DateTime.fromMillisecondsSinceEpoch(
-              (msg['created_at'] ?? 0) * 1000,
-            );
-
-            return [
-              if (msg['query'] != null)
-                ChatMessage(
-                  message: '${msg['query']}',
-                  isUser: true,
-                  timestamp: timestamp,
-                ),
-              if (msg['answer'] != null)
-                ChatMessage(
-                  message: '${msg['answer']}',
-                  isUser: false,
-                  timestamp: timestamp,
-                ),
-            ];
-          }).toList();
-        });
-      }
+          return [
+            if (msg['query'] != null)
+              ChatMessage(
+                message: '${msg['query']}',
+                isUser: true,
+                timestamp: timestamp,
+              ),
+            if (msg['answer'] != null)
+              ChatMessage(
+                message: '${msg['answer']}',
+                isUser: false,
+                timestamp: timestamp,
+              ),
+          ];
+        }).toList();
+      });
     } catch (e) {
-      print('Error loading conversation history thisone: $e');
+      print('Error loading conversation history: $e');
     }
   }
 
@@ -95,8 +160,20 @@ class _ChatPageState extends State<ChatFindPage> {
         responseMode: 'blocking',
       );
 
+      final prefs = await SharedPreferences.getInstance();
+      String? storedMapJson = prefs.getString('conversations');
+      Map<String, dynamic> conversations = storedMapJson != null
+          ? jsonDecode(storedMapJson)
+          : {};
+
+      if (_conversationId == "") {
+        final newConversationId = response['conversation_id'];
+        conversations[newConversationId] = {"title": newConversationId};
+        await prefs.setString('conversation_map', jsonEncode(conversations));
+      }
+
       setState(() {
-        // _conversationId = "ddfbbb47-f32f-40ac-a085-d3419b870735";
+        _conversationId = response['conversation_id'];
         _messages.add(
           ChatMessage(
             message: response['answer'] ?? 'No response',
@@ -139,9 +216,9 @@ class _ChatPageState extends State<ChatFindPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true, // Important for keyboard
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: Text('Search in PDf'),
+        title: Text('${widget.title}'),
         backgroundColor: Colors.blueGrey,
         foregroundColor: Colors.white,
       ),
@@ -171,32 +248,63 @@ class _ChatPageState extends State<ChatFindPage> {
       alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        padding: EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: message.isUser ? Colors.blueGrey[500] : Colors.grey[300],
-          borderRadius: BorderRadius.circular(16),
-        ),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            Text(
-              message.message,
-              style: TextStyle(
-                color: message.isUser ? Colors.white : Colors.black87,
-                fontSize: 16,
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: message.isUser ? Colors.blueGrey[500] : Colors.grey[300],
+                borderRadius: BorderRadius.circular(16),
+              ),
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.75,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    message.message,
+                    style: TextStyle(
+                      color: message.isUser ? Colors.white : Colors.black87,
+                      fontSize: 16,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    _formatTime(message.timestamp),
+                    style: TextStyle(
+                      color: message.isUser ? Colors.white70 : Colors.black54,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
             ),
-            SizedBox(height: 4),
-            Text(
-              _formatTime(message.timestamp),
-              style: TextStyle(
-                color: message.isUser ? Colors.white70 : Colors.black54,
-                fontSize: 12,
+
+            if (!message.isUser)
+              // Wrap only the star button in Consumer to rebuild on memo changes
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Consumer<MemoManager>(
+                  builder: (context, memoManager, child) {
+                    final isMemo = memoManager.memos.contains(message.message);
+                    return IconButton(
+                      icon: Icon(
+                        Icons.star_rounded,
+                        color: isMemo ? Colors.amber : Colors.grey,
+                      ),
+                      onPressed: () {
+                        if (isMemo) {
+                          memoManager.removeMemo(message.message);
+                        } else {
+                          memoManager.addMemo(message.message);
+                        }
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
           ],
         ),
       ),
