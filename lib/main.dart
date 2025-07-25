@@ -1,7 +1,6 @@
 import 'package:taxdul/features/Chatpage.dart';
 import 'package:flutter/material.dart';
 import 'package:taxdul/features/pages/MemoList.dart';
-import 'features/pages/landingpage.dart';
 import 'features/pages/homepage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/dify.dart';
@@ -11,6 +10,7 @@ import 'provider/MemoManager.dart';
 import 'features/chat/Chatlist.dart';
 import 'features/pages/MainScaffold.dart';
 import 'features/pages/welcome.dart';
+import 'package:taxdul/provider/ChatManager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,12 +25,15 @@ void main() async {
     await prefs.setString('user_id', userId);
   }
 
-  DifyService().initialize();
+  DifyService().initialize(userId);
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => MemoManager(),
-      child: MyApp(userId: userId),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => MemoManager()),
+        ChangeNotifierProvider(create: (_) => ChatManager()),
+      ],
+      child: MyApp(userId: userId), // You can pass userId if needed
     ),
   );
 }

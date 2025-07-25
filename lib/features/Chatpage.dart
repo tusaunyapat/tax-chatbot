@@ -81,7 +81,7 @@ class _ChatPageState extends State<ChatFindPage> {
     try {
       final history = await _difyService.getConversationHistory(
         conversationId: _conversationId,
-        userId: _userId,
+        // userId: _userId,
       );
 
       setState(() {
@@ -246,7 +246,7 @@ class _ChatPageState extends State<ChatFindPage> {
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: message.isUser
-                    ? Colors.indigoAccent!.withOpacity(0.7)
+                    ? Colors.indigoAccent.withOpacity(0.7)
                     : Colors.grey[300]!.withOpacity(0.4),
                 borderRadius: BorderRadius.circular(16),
               ),

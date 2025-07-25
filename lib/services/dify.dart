@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 class DifyService {
@@ -15,11 +16,12 @@ class DifyService {
   String? _apiKey;
   String? _apiKeyStreaming;
   String? _apiKeyBlocking;
+  late String userId;
 
   String? _baseUrl;
   final _uuid = Uuid();
 
-  void initialize() {
+  void initialize(String userId) {
     _apiKeyBlocking = dotenv.env['DIFY_API_KEY'];
     _apiKeyStreaming = dotenv.env['DIFY_API_KEY_STREAMING'];
 
@@ -29,8 +31,24 @@ class DifyService {
     if (_apiKey == null || _apiKey!.isEmpty) {
       throw Exception('DIFY_API_KEY not found in environment variables');
     }
+    this.userId = userId;
 
     print('✅ Dify Service initialized with base URL: $_baseUrl');
+  }
+
+  Future<void> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? storedUserId = prefs.getString('user_id');
+
+    if (storedUserId == null || storedUserId.isEmpty) {
+      // Generate a new UUID
+      storedUserId = _uuid.v4();
+      await prefs.setString('user_id', storedUserId);
+    }
+
+    // Set the class variable
+    userId = storedUserId;
+    print('✅ User ID set: $userId');
   }
 
   Map<String, String> get _headersBlocking => {
@@ -148,11 +166,10 @@ class DifyService {
   // Get conversation history
   Future<List<Map<String, dynamic>>> getConversationHistory({
     required String conversationId,
-    String? userId,
+
     int limit = 20,
   }) async {
     try {
-      print(conversationId);
       final url = Uri.parse('$_baseUrl/messages').replace(
         queryParameters: {
           'conversation_id': conversationId,
@@ -166,11 +183,9 @@ class DifyService {
       final response = await http.get(url, headers: _headersBlocking);
 
       print('📥 Response status: ${response.statusCode}');
-      print('mes----------- ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print("got this line");
         return List<Map<String, dynamic>>.from(data['data'] ?? []);
       } else {
         throw Exception('API Error: ${response.statusCode} - ${response.body}');
@@ -182,10 +197,7 @@ class DifyService {
   }
 
   // Get conversations list
-  Future<List<Map<String, dynamic>>> getConversations({
-    String? userId,
-    int limit = 20,
-  }) async {
+  Future<List<Map<String, dynamic>>> getConversations({int limit = 20}) async {
     try {
       final url = Uri.parse(
         '$_baseUrl/conversations',
@@ -199,7 +211,7 @@ class DifyService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print("conversation pass 200");
+        print(data['data']);
         return List<Map<String, dynamic>>.from(data['data'] ?? []);
       } else {
         throw Exception('API Error: ${response.statusCode} - ${response.body}');
@@ -214,12 +226,10 @@ class DifyService {
     try {
       final url = Uri.parse('${_baseUrl}/parameters');
 
-      print('get parameter and welcome text from ${url}');
       final response = await http.get(url, headers: _headersBlocking);
       print('📥 Response status: ${response.statusCode}');
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
-        print("parameters pass 200");
         return data;
       } else {
         throw Exception('API Error: ${response.statusCode} - ${response.body}');
@@ -230,17 +240,7 @@ class DifyService {
     }
   }
 
-  // Delete a conversation
-  //   curl -X DELETE 'https://api.dify.ai/v1/conversations/:conversation_id' \
-  // --header 'Authorization: Bearer {api_key}' \
-  // --header 'Content-Type: application/json' \
-  // --data-raw '{
-  //  "user": "abc-123"
-  // }'
-  Future<bool> deleteConversation({
-    required String conversationId,
-    String? userId,
-  }) async {
+  Future<bool> deleteConversation({required String conversationId}) async {
     try {
       final url = Uri.parse('$_baseUrl/conversations/$conversationId');
 
@@ -262,19 +262,5 @@ class DifyService {
   // Generate a unique user ID
   String generateUserId() {
     return 'flutter_${_uuid.v4()}';
-  }
-
-  // Test API connection
-  Future<bool> testConnection() async {
-    try {
-      final testMessage = await sendChatMessage(
-        message: 'Hello',
-        userId: generateUserId(),
-      );
-      return testMessage.isNotEmpty;
-    } catch (e) {
-      print('❌ Connection test failed: $e');
-      return false;
-    }
   }
 }
