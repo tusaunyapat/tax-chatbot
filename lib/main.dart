@@ -1,21 +1,21 @@
-import 'package:taxdul/features/find_page.dart';
-import 'package:taxdul/features/menu_page.dart';
+import 'package:taxdul/features/Chatpage.dart';
 import 'package:flutter/material.dart';
+import 'package:taxdul/features/pages/MemoList.dart';
 import 'features/pages/landingpage.dart';
 import 'features/pages/homepage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uuid/uuid.dart';
-import 'features/meal_page.dart';
 import 'services/dify.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'provider/MemoManager.dart';
+import 'features/chat/Chatlist.dart';
+import 'features/pages/MainScaffold.dart';
+import 'features/pages/welcome.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await dotenv.load(fileName: ".env");
-  print('✅ ENV Loaded: ${dotenv.env['DIFY_API_KEY']}');
 
   final prefs = await SharedPreferences.getInstance();
   String? userId = prefs.getString('user_id');
@@ -23,23 +23,16 @@ void main() async {
   if (userId == null) {
     userId = DifyService().generateUserId();
     await prefs.setString('user_id', userId);
-    print('🆕 Generated and stored userId: $userId');
-  } else {
-    print('📦 Loaded userId from SharedPreferences: $userId');
   }
 
-  List<String> conversationIds = prefs.getStringList('conversation_ids') ?? [];
-  print('📃📃📃converation stored in share preference : ${conversationIds}');
-
   DifyService().initialize();
-  print('✅ Dify Service Initialized');
 
   runApp(
     ChangeNotifierProvider(
       create: (_) => MemoManager(),
       child: MyApp(userId: userId),
     ),
-  ); // ✅ pass userId to MyApp
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -56,6 +49,7 @@ class MyApp extends StatelessWidget {
       ),
       home: HomePage(),
       initialRoute: '/',
+      debugShowCheckedModeBanner: false,
       onGenerateRoute: (settings) {
         final Uri uri = Uri.parse(settings.name ?? '');
         if (uri.pathSegments.length == 2 && uri.pathSegments.first == 'chat') {
@@ -72,15 +66,19 @@ class MyApp extends StatelessWidget {
         switch (settings.name) {
           case '/':
             return MaterialPageRoute(builder: (_) => HomePage());
-          case '/menu':
-            return MaterialPageRoute(builder: (_) => MenuPage());
           case '/home':
-            return MaterialPageRoute(builder: (_) => LandingPage());
+            return MaterialPageRoute(builder: (_) => MainScaffold());
+          case '/chatlist':
+            return MaterialPageRoute(builder: (_) => ChatListPage());
           case '/newchat':
             return MaterialPageRoute(
               builder: (_) =>
                   ChatFindPage(conversationId: "", title: "New Chat"),
             );
+          case '/memo':
+            return MaterialPageRoute(builder: (_) => MemoListPage());
+          case '/welcome':
+            return MaterialPageRoute(builder: (_) => WelcomePage());
           default:
             return MaterialPageRoute(
               builder: (_) =>

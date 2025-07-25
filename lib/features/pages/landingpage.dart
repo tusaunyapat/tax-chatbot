@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:taxdul/features/chat/chatlist.dart';
+import 'package:taxdul/features/chat/latestChat.dart';
 import 'package:taxdul/features/chat/memo.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LandingPage extends StatefulWidget {
   @override
@@ -10,8 +11,7 @@ class LandingPage extends StatefulWidget {
 class _LandingPageState extends State<LandingPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _fadeAnimation;
+  String? fullname = "";
 
   @override
   void initState() {
@@ -21,18 +21,16 @@ class _LandingPageState extends State<LandingPage>
       vsync: this,
       duration: Duration(milliseconds: 1000),
     );
-
-    _slideAnimation = Tween<Offset>(
-      begin: Offset(0, 0.5), // Starts below
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
-
     _controller.forward();
+
+    _loadFullname();
+  }
+
+  void _loadFullname() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      fullname = prefs.getString("fullname");
+    });
   }
 
   @override
@@ -43,12 +41,18 @@ class _LandingPageState extends State<LandingPage>
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
+    final screenHeight =
+        MediaQuery.of(context).size.height -
+        MediaQuery.of(context).padding.top -
+        kToolbarHeight // typical appbar height, if you have one
+        -
+        kBottomNavigationBarHeight; // if you have bottomNavigationBar
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
+            colors: [Colors.purple, Colors.indigoAccent],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -73,7 +77,7 @@ class _LandingPageState extends State<LandingPage>
                         style: TextStyle(fontSize: 16, color: Colors.white70),
                       ),
                       Text(
-                        'Your Name', // Replace with dynamic username if needed
+                        '${fullname}', // Replace with dynamic username if needed
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -85,51 +89,122 @@ class _LandingPageState extends State<LandingPage>
                 ],
               ),
             ),
+            Row(
+              children: [
+                // First button
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        backgroundColor: Colors.black45.withOpacity(0.3),
+                        elevation: 6,
+                        shadowColor: Colors.black45.withOpacity(0.5),
+                      ),
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/');
+                      },
+                      child: const Row(
+                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Icon(
+                            Icons.account_circle,
+                            size: 48,
+                            color: Colors.white,
+                          ),
+                          Expanded(
+                            child: Text(
+                              'Info',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
 
-            const Spacer(), // pushes the box down to the bottom
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        backgroundColor: Colors.black45.withOpacity(0.3),
+                        elevation: 6,
+                        shadowColor: Colors.black45.withOpacity(0.5),
+                      ),
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/newchat');
+                      },
+                      child: const Row(
+                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Icon(
+                            Icons.forum_rounded,
+                            size: 36,
+                            color: Colors.white,
+                          ),
+                          Expanded(
+                            child: Text(
+                              'New Chat',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const Spacer(),
             Container(
-              height: screenHeight * 0.8, // more than half the screen
+              height: screenHeight * 0.75,
               width: double.infinity,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(32),
                   topRight: Radius.circular(32),
                 ),
               ),
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
               child: Column(
                 children: [
-                  Center(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 14,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        backgroundColor: Colors.blueAccent,
-                        elevation: 6,
-                        shadowColor: Colors.blueAccent.withOpacity(0.5),
-                      ),
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/newchat');
-                      },
-                      child: Text(
-                        'New Chat',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  Expanded(child: ChatListPage()),
+                  Expanded(child: LatestChat()),
                   Expanded(child: MemoList()),
                 ],
               ),

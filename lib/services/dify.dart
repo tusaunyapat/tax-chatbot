@@ -1,13 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:uuid/uuid.dart';
-import 'dart:io';
-import 'package:flutter/services.dart' show rootBundle;
-import 'package:path_provider/path_provider.dart';
-import 'package:http_parser/http_parser.dart';
-import 'dart:convert';
 
 class DifyService {
   static final DifyService _instance = DifyService._internal();
@@ -235,28 +229,35 @@ class DifyService {
       throw Exception('Failed to get parameters: $e');
     }
   }
+
   // Delete a conversation
-  // Future<bool> deleteConversation({
-  //   required String conversationId,
-  //   String? userId,
-  // }) async {
-  //   try {
-  //     final url = Uri.parse('$_baseUrl/conversations/$conversationId');
+  //   curl -X DELETE 'https://api.dify.ai/v1/conversations/:conversation_id' \
+  // --header 'Authorization: Bearer {api_key}' \
+  // --header 'Content-Type: application/json' \
+  // --data-raw '{
+  //  "user": "abc-123"
+  // }'
+  Future<bool> deleteConversation({
+    required String conversationId,
+    String? userId,
+  }) async {
+    try {
+      final url = Uri.parse('$_baseUrl/conversations/$conversationId');
 
-  //     final response = await http.delete(
-  //       url,
-  //       headers: _headers,
-  //       body: jsonEncode({'user': userId ?? 'default_user'}),
-  //     );
+      final response = await http.delete(
+        url,
+        headers: _headersBlocking,
+        body: jsonEncode({'user': userId ?? 'default_user'}),
+      );
 
-  //     print('📥 Delete response status: ${response.statusCode}');
+      print('📥 Delete response status: ${response.statusCode}');
 
-  //     return response.statusCode == 204;
-  //   } catch (e) {
-  //     print('❌ Error deleting conversation: $e');
-  //     return false;
-  //   }
-  // }
+      return response.statusCode == 204;
+    } catch (e) {
+      print('❌ Error deleting conversation: $e');
+      return false;
+    }
+  }
 
   // Generate a unique user ID
   String generateUserId() {

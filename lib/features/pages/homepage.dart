@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -8,8 +9,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
@@ -20,19 +19,17 @@ class _HomePageState extends State<HomePage>
       duration: Duration(milliseconds: 1000),
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: Offset(0, 0.5), // Starts below
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
-
     _controller.forward();
-    Future.delayed(Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, '/home');
+    Future.delayed(Duration(seconds: 3), () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove("fullname");
+
+      String? name = prefs.getString("fullname");
+      if (name != null) {
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        Navigator.pushReplacementNamed(context, '/welcome');
+      }
     });
   }
 

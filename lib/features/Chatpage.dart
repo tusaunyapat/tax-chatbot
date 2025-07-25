@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:taxdul/services/dify.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:taxdul/provider/MemoManager.dart';
 
@@ -20,18 +19,19 @@ class _ChatPageState extends State<ChatFindPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final DifyService _difyService = DifyService();
+  dynamic parameters;
+  bool isInit = true;
 
   List<ChatMessage> _messages = [];
-  List<String> _memos = []; // เก็บ list memo ใน state
   bool _isLoading = false;
   String _conversationId = "";
   String _userId = "";
+  String textSearch = "";
 
   @override
   void initState() {
     super.initState();
     _initializeUser();
-    _loadMemos(); // โหลดเมโมตอนเริ่ม
   }
 
   Future<void> _initializeUser() async {
@@ -51,34 +51,11 @@ class _ChatPageState extends State<ChatFindPage> {
 
     if (widget.conversationId != "") {
       _loadConversationHistory();
+      setState(() {
+        isInit = false;
+      });
     }
     _getParameters();
-  }
-
-  Future<void> _loadMemos() async {
-    final prefs = await SharedPreferences.getInstance();
-    final memos = prefs.getStringList("memos") ?? [];
-    setState(() {
-      _memos = memos;
-    });
-  }
-
-  Future<void> _addMemo(String message) async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _memos.add(message);
-    });
-    await prefs.setStringList("memos", _memos);
-    print("add memo $message");
-  }
-
-  Future<void> _removeMemo(String message) async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _memos.remove(message);
-    });
-    await prefs.setStringList("memos", _memos);
-    print("remove memo $message");
   }
 
   Future<void> _getParameters() async {
@@ -93,6 +70,7 @@ class _ChatPageState extends State<ChatFindPage> {
             timestamp: DateTime.now(),
           ),
         );
+        this.parameters = parameters;
       });
     } catch (e) {
       print('Error loading welcome message: $e');
@@ -215,12 +193,26 @@ class _ChatPageState extends State<ChatFindPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (textSearch != "" || _messageController.text != textSearch) {
+      _messageController.text = textSearch;
+      textSearch = "";
+    }
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text('${widget.title}'),
-        backgroundColor: Colors.blueGrey,
+        backgroundColor: Colors.purpleAccent,
         foregroundColor: Colors.white,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.purple, Colors.indigoAccent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -253,7 +245,9 @@ class _ChatPageState extends State<ChatFindPage> {
             Container(
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: message.isUser ? Colors.blueGrey[500] : Colors.grey[300],
+                color: message.isUser
+                    ? Colors.indigoAccent!.withOpacity(0.7)
+                    : Colors.grey[300]!.withOpacity(0.4),
                 borderRadius: BorderRadius.circular(16),
               ),
               constraints: BoxConstraints(
@@ -337,46 +331,106 @@ class _ChatPageState extends State<ChatFindPage> {
     );
   }
 
+  void _sendAndHideQuestions() {
+    setState(() {
+      isInit = false;
+    });
+    _sendMessageBlocking();
+  }
+
   Widget _buildMessageInput() {
     return Container(
       padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 4,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
+
+      child: Column(
         children: [
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: InputDecoration(
-                hintText: 'Type a message...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+          if (isInit)
+            Column(
+              children: [
+                if (parameters != null)
+                  ...parameters['suggested_questions'].map<Widget>((question) {
+                    return Container(
+                      alignment: Alignment
+                          .centerLeft, // Aligns the content to the start
+                      margin: EdgeInsets.symmetric(vertical: 2),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey), // Add border
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: TextButton(
+                        onPressed: () {
+                          setState(() {
+                            textSearch = question;
+                          });
+                        },
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.all(8),
+                          alignment: Alignment
+                              .centerLeft, // Align text inside the button
+                        ),
+                        child: Text(
+                          question,
+                          style: TextStyle(fontSize: 14, color: Colors.black87),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+              ],
+            ),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: 'Type a message...',
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                    ),
+                    maxLines: 5,
+                    minLines: 1,
+                    textInputAction: TextInputAction.newline,
+                    onSubmitted: (_) => _sendAndHideQuestions(),
+                    enabled: !_isLoading,
+                  ),
                 ),
               ),
-              maxLines: 5,
-              minLines: 1,
-              textInputAction: TextInputAction.newline,
-              onSubmitted: (_) => _sendMessageBlocking(),
-              enabled: !_isLoading,
-            ),
-          ),
-          SizedBox(width: 8),
-          FloatingActionButton(
-            onPressed: _isLoading ? null : _sendMessageBlocking,
-            child: Icon(_isLoading ? Icons.hourglass_empty : Icons.send),
-            mini: true,
+              SizedBox(width: 8),
+              SizedBox(
+                height: 40,
+                width: 40,
+                child: FloatingActionButton(
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          isInit = false;
+                          _sendMessageBlocking();
+                        },
+                  backgroundColor: _isLoading ? Colors.grey : Colors.deepPurple,
+                  elevation: 2,
+                  child: Icon(
+                    _isLoading ? Icons.hourglass_empty : Icons.send,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:taxdul/services/dify.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 class ChatListPage extends StatefulWidget {
   @override
@@ -24,17 +25,9 @@ class _ChatListPageState extends State<ChatListPage> {
     final conversations = await _difyService.getConversations(userId: _userId);
 
     setState(() {
-      _conversationIds = conversations;
+      _conversationIds = conversations ?? [];
     });
   }
-
-  // Future<void> _deleteConversation(String id) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   setState(() {
-  //     _conversationIds.remove(id);
-  //   });
-  //   // await prefs.setStringList('conversation_ids', _conversationIds);
-  // }
 
   void _openChat(String conversationId, String title) {
     Navigator.pushNamed(
@@ -44,62 +37,116 @@ class _ChatListPageState extends State<ChatListPage> {
     );
   }
 
+  Future<void> _deleteConversation(String conversationId) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    String? _userId = prefs.getString('user_id');
+    await _difyService.deleteConversation(
+      conversationId: conversationId,
+      userId: _userId,
+    );
+    _loadConversations();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.transparent,
-
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: 20),
-          Text(
-            'Latest Chats',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: false, // Align title to the left
+        title: Text(
+          'My Chats',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            foreground: Paint()
+              ..shader = LinearGradient(
+                colors: <Color>[Colors.purpleAccent, Colors.deepPurple],
+              ).createShader(Rect.fromLTWH(0.0, 0.0, 200.0, 70.0)),
           ),
-          // No SizedBox or padding here to keep no space
-          _conversationIds.isEmpty
-              ? Expanded(
-                  child: Center(
-                    child: Text(
-                      'No conversations',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
-                  ),
-                )
-              : Expanded(
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    itemCount: _conversationIds.length,
-                    itemBuilder: (context, index) {
-                      final id = _conversationIds[index]['id'];
-                      if (index < 4) {
+        ),
+      ),
+
+      body: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _conversationIds.isEmpty
+                  ? Center(child: Text('No conversations'))
+                  : ListView.builder(
+                      padding: EdgeInsets.zero,
+                      itemCount: _conversationIds.length,
+                      itemBuilder: (context, index) {
+                        final id = _conversationIds[index]['id'];
+                        final name = _conversationIds[index]['name'];
+
                         return Padding(
-                          padding: EdgeInsets.symmetric(vertical: 4),
-                          child: Material(
-                            color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(12),
-                            child: ListTile(
-                              title: Text(
-                                '${_conversationIds[index]['name']}',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Slidable(
+                            key: ValueKey(id),
+                            endActionPane: ActionPane(
+                              motion: const DrawerMotion(),
+                              extentRatio: 0.25,
+                              children: [
+                                SlidableAction(
+                                  onPressed: (context) =>
+                                      _deleteConversation(id),
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(10),
+                                  ),
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                  icon: Icons.delete,
+                                  label: 'Delete',
+                                ),
+                              ],
+                            ),
+                            child: Ink(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [Colors.white, Colors.grey.shade100],
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.2),
+                                    blurRadius: 6,
+                                    offset: Offset(0, 4),
+                                  ),
+                                ],
                               ),
-                              trailing: IconButton(
-                                icon: Icon(Icons.delete),
-                                onPressed: () => debugPrint("delete"),
-                              ),
-                              onTap: () => _openChat(
-                                id,
-                                _conversationIds[index]['name'],
+                              child: ListTile(
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 2,
+                                ),
+                                title: Text(
+                                  name,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                trailing: SizedBox(
+                                  width: 20,
+                                  child: Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    size: 16,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                onTap: () => _openChat(id, name),
                               ),
                             ),
                           ),
                         );
-                      }
-                    },
-                  ),
-                ),
-        ],
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
