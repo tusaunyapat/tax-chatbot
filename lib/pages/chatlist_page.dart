@@ -1,53 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:taxdul/provider/ChatManager.dart';
-import 'package:taxdul/services/dify.dart';
+import 'package:taxdul/provider/chat_manager.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 
 class ChatListPage extends StatefulWidget {
+  const ChatListPage({super.key});
   @override
   _ChatListPageState createState() => _ChatListPageState();
 }
 
 class _ChatListPageState extends State<ChatListPage> {
-  // List<dynamic> _conversationIds = [];
-  final DifyService _difyService = DifyService();
-
   @override
   void initState() {
     super.initState();
-    // _loadConversations();
   }
-
-  // Future<void> _loadConversations() async {
-  //   final prefs = await SharedPreferences.getInstance();
-
-  //   String? _userId = prefs.getString('user_id');
-  //   final conversations = await _difyService.getConversations(userId: _userId);
-
-  //   setState(() {
-  //     _conversationIds = conversations;
-  //   });
-  // }
 
   void _openChat(String conversationId, String title) {
     Navigator.pushNamed(
       context,
-      '/chat/${conversationId}?title=${title}',
+      '/chat/$conversationId?title=$title',
       arguments: {'conversationId': conversationId},
     );
   }
-
-  // Future<void> _deleteConversation(String conversationId) async {
-  //   final prefs = await SharedPreferences.getInstance();
-
-  //   String? _userId = prefs.getString('user_id');
-  //   await _difyService.deleteConversation(
-  //     conversationId: conversationId,
-  //     userId: _userId,
-  //   );
-  //   _loadConversations();
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +31,7 @@ class _ChatListPageState extends State<ChatListPage> {
 
         return Scaffold(
           appBar: AppBar(
-            centerTitle: false, // Align title to the left
+            centerTitle: false,
             title: Text(
               'My Chats',
               style: TextStyle(
@@ -118,7 +92,9 @@ class _ChatListPageState extends State<ChatListPage> {
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.grey.withOpacity(0.2),
+                                        color: Colors.grey.withAlpha(
+                                          (0.2 * 255).round(),
+                                        ),
                                         blurRadius: 6,
                                         offset: Offset(0, 4),
                                       ),
@@ -145,7 +121,10 @@ class _ChatListPageState extends State<ChatListPage> {
                                         color: Colors.grey,
                                       ),
                                     ),
-                                    onTap: () => _openChat(id, name),
+                                    onTap: () => {
+                                      chatManager.selectChat(id),
+                                      _openChat(id, name),
+                                    },
                                   ),
                                 ),
                               ),

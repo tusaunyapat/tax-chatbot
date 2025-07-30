@@ -1,16 +1,16 @@
-import 'package:taxdul/features/Chatpage.dart';
+import 'package:taxdul/pages/chat_page.dart';
 import 'package:flutter/material.dart';
-import 'package:taxdul/features/pages/MemoList.dart';
-import 'features/pages/homepage.dart';
+import 'package:taxdul/pages/memolist_page.dart';
+import 'pages/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'services/dify.dart';
+import 'services/dify_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
-import 'provider/MemoManager.dart';
-import 'features/chat/Chatlist.dart';
-import 'features/pages/MainScaffold.dart';
-import 'features/pages/welcome.dart';
-import 'package:taxdul/provider/ChatManager.dart';
+import 'provider/memo_manager.dart';
+import 'pages/chatlist_page.dart';
+import 'pages/mainscaffold.dart';
+import 'pages/welcome_page.dart';
+import 'package:taxdul/provider/chat_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +33,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => MemoManager()),
         ChangeNotifierProvider(create: (_) => ChatManager()),
       ],
-      child: MyApp(userId: userId), // You can pass userId if needed
+      child: MyApp(userId: userId),
     ),
   );
 }
@@ -61,11 +61,10 @@ class MyApp extends StatelessWidget {
 
           return MaterialPageRoute(
             builder: (context) =>
-                ChatFindPage(conversationId: conversationId, title: title),
+                ChatPage(conversationId: conversationId, title: title),
           );
         }
 
-        // fallback
         switch (settings.name) {
           case '/':
             return MaterialPageRoute(builder: (_) => HomePage());
@@ -75,8 +74,7 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => ChatListPage());
           case '/newchat':
             return MaterialPageRoute(
-              builder: (_) =>
-                  ChatFindPage(conversationId: "", title: "New Chat"),
+              builder: (_) => ChatPage(conversationId: "", title: "New Chat"),
             );
           case '/memo':
             return MaterialPageRoute(builder: (_) => MemoListPage());

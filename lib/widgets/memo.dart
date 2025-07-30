@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:taxdul/provider/MemoManager.dart';
+import 'package:taxdul/provider/memo_manager.dart';
 
 class MemoList extends StatelessWidget {
+  const MemoList({super.key});
   @override
   Widget build(BuildContext context) {
     return Consumer<MemoManager>(
@@ -21,7 +22,13 @@ class MemoList extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      decorationStyle: TextDecorationStyle.dashed,
+                      foreground: Paint()
+                        ..shader = LinearGradient(
+                          colors: <Color>[
+                            Colors.purpleAccent,
+                            Colors.deepPurple,
+                          ],
+                        ).createShader(Rect.fromLTWH(0.0, 0.0, 200.0, 70.0)),
                     ),
                   ),
                   TextButton(

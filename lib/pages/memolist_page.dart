@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:taxdul/provider/MemoManager.dart';
+import 'package:taxdul/provider/memo_manager.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 class MemoListPage extends StatefulWidget {
+  const MemoListPage({super.key});
   @override
   _MemoListPageState createState() => _MemoListPageState();
 }
@@ -13,7 +14,7 @@ class _MemoListPageState extends State<MemoListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: false, // Align title to the left
+        centerTitle: false,
         title: Text(
           'My Memos',
           style: TextStyle(
@@ -51,8 +52,7 @@ class _MemoListPageState extends State<MemoListPage> {
                         child: Slidable(
                           key: ValueKey(memos[index]),
                           endActionPane: ActionPane(
-                            motion:
-                                const DrawerMotion(), // Or use ScrollMotion()
+                            motion: const DrawerMotion(),
                             extentRatio: 0.25,
                             children: [
                               SlidableAction(
@@ -78,7 +78,9 @@ class _MemoListPageState extends State<MemoListPage> {
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.grey.withOpacity(0.2),
+                                  color: Colors.grey.withAlpha(
+                                    (0.2 * 255).round(),
+                                  ),
                                   blurRadius: 6,
                                   offset: Offset(0, 4),
                                 ),

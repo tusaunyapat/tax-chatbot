@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class WelcomePage extends StatefulWidget {
+  const WelcomePage({super.key});
   @override
   _WelcomePageState createState() => _WelcomePageState();
 }
@@ -33,7 +34,7 @@ class _WelcomePageState extends State<WelcomePage> {
               left: 0,
               right: 0,
               child: Transform.rotate(
-                angle: 0, // -45 degrees in radians
+                angle: 0,
                 child: Image.asset(
                   'assets/avatar.png',
                   width: 550,

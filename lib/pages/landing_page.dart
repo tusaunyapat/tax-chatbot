@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:taxdul/features/chat/latestChat.dart';
-import 'package:taxdul/features/chat/memo.dart';
+import 'package:taxdul/widgets/latest_chat.dart';
+import 'package:taxdul/widgets/memo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LandingPage extends StatefulWidget {
+  const LandingPage({super.key});
+
   @override
   _LandingPageState createState() => _LandingPageState();
 }
@@ -44,9 +46,8 @@ class _LandingPageState extends State<LandingPage>
     final screenHeight =
         MediaQuery.of(context).size.height -
         MediaQuery.of(context).padding.top -
-        kToolbarHeight // typical appbar height, if you have one
-        -
-        kBottomNavigationBarHeight; // if you have bottomNavigationBar
+        kToolbarHeight -
+        kBottomNavigationBarHeight;
 
     return Scaffold(
       body: Container(
@@ -66,9 +67,9 @@ class _LandingPageState extends State<LandingPage>
                   CircleAvatar(
                     radius: 40,
                     backgroundImage: AssetImage('assets/avatar.png'),
-                    backgroundColor: Colors.grey.shade400,
+                    backgroundColor: Colors.grey.shade100,
                   ),
-                  SizedBox(width: 16), // spacing between avatar and text
+                  SizedBox(width: 16),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -77,7 +78,7 @@ class _LandingPageState extends State<LandingPage>
                         style: TextStyle(fontSize: 16, color: Colors.white70),
                       ),
                       Text(
-                        '${fullname}', // Replace with dynamic username if needed
+                        '$fullname',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -91,7 +92,6 @@ class _LandingPageState extends State<LandingPage>
             ),
             Row(
               children: [
-                // First button
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -107,15 +107,18 @@ class _LandingPageState extends State<LandingPage>
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        backgroundColor: Colors.black45.withOpacity(0.3),
+                        backgroundColor: Colors.black45.withAlpha(
+                          (0.3 * 255).round(),
+                        ),
                         elevation: 6,
-                        shadowColor: Colors.black45.withOpacity(0.5),
+                        shadowColor: Colors.black45.withAlpha(
+                          (0.5 * 255).round(),
+                        ),
                       ),
                       onPressed: () {
                         Navigator.pushNamed(context, '/');
                       },
                       child: const Row(
-                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Icon(
                             Icons.account_circle,
@@ -155,15 +158,18 @@ class _LandingPageState extends State<LandingPage>
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        backgroundColor: Colors.black45.withOpacity(0.3),
+                        backgroundColor: Colors.black45.withAlpha(
+                          (0.3 * 255).round(),
+                        ),
                         elevation: 6,
-                        shadowColor: Colors.black45.withOpacity(0.5),
+                        shadowColor: Colors.black45.withAlpha(
+                          (0.5 * 255).round(),
+                        ),
                       ),
                       onPressed: () {
                         Navigator.pushNamed(context, '/newchat');
                       },
                       child: const Row(
-                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Icon(
                             Icons.forum_rounded,

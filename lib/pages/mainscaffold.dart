@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:taxdul/features/chat/Chatlist.dart';
-import 'package:taxdul/features/pages/landingpage.dart';
-import 'package:taxdul/features/pages/MemoList.dart';
+import 'package:taxdul/pages/chatlist_page.dart';
+import 'package:taxdul/pages/landing_page.dart';
+import 'package:taxdul/pages/memolist_page.dart';
 
 class MainScaffold extends StatefulWidget {
   final int initialIndex;
@@ -64,18 +64,12 @@ class _MainScaffoldState extends State<MainScaffold> {
               ),
               BottomNavigationBarItem(
                 icon: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8.0,
-                    vertical: 4.0,
-                  ),
-                  child: Icon(Icons.add_circle_outline),
+                  padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                  child: Icon(Icons.note_outlined),
                 ),
                 activeIcon: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8.0,
-                    vertical: 4.0,
-                  ),
-                  child: Icon(Icons.add_circle),
+                  padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                  child: Icon(Icons.note),
                 ),
                 label: 'Memo',
               ),

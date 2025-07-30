@@ -1,39 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:taxdul/services/dify.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:taxdul/provider/ChatManager.dart';
+import 'package:taxdul/provider/chat_manager.dart';
 import 'package:provider/provider.dart';
 
 class LatestChat extends StatefulWidget {
+  const LatestChat({super.key});
   @override
   _LatestChatState createState() => _LatestChatState();
 }
 
 class _LatestChatState extends State<LatestChat> {
-  // List<dynamic> _conversationIds = [];
-  final DifyService _difyService = DifyService();
-
   @override
   void initState() {
     super.initState();
-    // _loadConversations();
   }
-
-  // Future<void> _loadConversations() async {
-  //   final prefs = await SharedPreferences.getInstance();
-
-  //   String? _userId = prefs.getString('user_id');
-  //   final conversations = await _difyService.getConversations(userId: _userId);
-
-  //   setState(() {
-  //     _conversationIds = conversations;
-  //   });
-  // }
 
   void _openChat(String conversationId, String title) {
     Navigator.pushNamed(
       context,
-      '/chat/${conversationId}?title=${title}',
+      '/chat/$conversationId?title=$title',
       arguments: {'conversationId': conversationId},
     );
   }
@@ -59,7 +43,13 @@ class _LatestChatState extends State<LatestChat> {
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      decorationStyle: TextDecorationStyle.dashed,
+                      foreground: Paint()
+                        ..shader = LinearGradient(
+                          colors: <Color>[
+                            Colors.purpleAccent,
+                            Colors.deepPurple,
+                          ],
+                        ).createShader(Rect.fromLTWH(0.0, 0.0, 200.0, 70.0)),
                     ),
                   ),
                   TextButton(
@@ -73,7 +63,6 @@ class _LatestChatState extends State<LatestChat> {
                 ],
               ),
 
-              // No SizedBox or padding here to keep no space
               conversations.isEmpty
                   ? Expanded(
                       child: Center(
@@ -93,6 +82,7 @@ class _LatestChatState extends State<LatestChat> {
                             : conversations.length,
                         itemBuilder: (context, index) {
                           final id = conversations[index]['conversationId'];
+                          final title = conversations[index]['title'];
 
                           return Padding(
                             padding: EdgeInsets.symmetric(vertical: 4),
@@ -101,14 +91,14 @@ class _LatestChatState extends State<LatestChat> {
                               borderRadius: BorderRadius.circular(12),
                               child: ListTile(
                                 title: Text(
-                                  '${conversations[index]['title']}',
+                                  '$title',
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
 
-                                onTap: () => _openChat(
-                                  id,
-                                  conversations[index]['title'],
-                                ),
+                                onTap: () => {
+                                  chatManager.selectChat(id),
+                                  _openChat(id, title),
+                                },
                                 trailing: Icon(
                                   Icons.arrow_forward_ios_rounded,
                                   size: 16,

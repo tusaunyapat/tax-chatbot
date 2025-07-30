@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:taxdul/features/pages/MainScaffold.dart';
-import 'package:taxdul/provider/ChatManager.dart';
+import 'package:taxdul/provider/chat_manager.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -18,17 +18,16 @@ class _HomePageState extends State<HomePage> {
 
     final chatManager = Provider.of<ChatManager>(context);
     if (!chatManager.isLoading && !_hasNavigated) {
-      _hasNavigated = true; // Prevent multiple navigations
+      _hasNavigated = true;
       _checkFullnameAndNavigate();
     }
   }
 
   Future<void> _checkFullnameAndNavigate() async {
     final prefs = await SharedPreferences.getInstance();
-    // await prefs.remove("fullname");
     String? name = prefs.getString("fullname");
 
-    if (!mounted) return; // Safety check
+    if (!mounted) return;
 
     if (name != null && name.isNotEmpty) {
       Navigator.pushReplacementNamed(context, '/home');
@@ -59,7 +58,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Icon(
                         Icons.smart_toy,
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withAlpha((0.85 * 255).round()),
                         size: 160,
                       ),
                       const SizedBox(height: 40),
@@ -73,7 +72,9 @@ class _HomePageState extends State<HomePage> {
                           letterSpacing: 1.2,
                           shadows: [
                             Shadow(
-                              color: Colors.black.withOpacity(0.3),
+                              color: Colors.black.withAlpha(
+                                (0.3 * 255).round(),
+                              ),
                               offset: Offset(2, 2),
                               blurRadius: 6,
                             ),
@@ -86,6 +87,19 @@ class _HomePageState extends State<HomePage> {
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 18, color: Colors.white70),
                       ),
+                      SizedBox(height: 16),
+                      LinearProgressIndicator(
+                        value: chatManager.loadingPercentage / 100.0,
+                        backgroundColor: Colors.white24,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        minHeight: 8,
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        '${chatManager.loadingPercentage.toStringAsFixed(1)} %',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 18, color: Colors.white70),
+                      ),
                       const SizedBox(height: 40),
                     ],
                   ),
@@ -94,7 +108,6 @@ class _HomePageState extends State<HomePage> {
             ),
           );
         } else {
-          // Still show splash while navigating, or a blank container to avoid flicker
           return Container();
         }
       },

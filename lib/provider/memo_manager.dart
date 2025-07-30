@@ -13,7 +13,7 @@ class MemoManager extends ChangeNotifier {
   Future<void> _loadMemos() async {
     final prefs = await SharedPreferences.getInstance();
     _memos = prefs.getStringList("memos") ?? [];
-    notifyListeners(); // update listeners when loaded
+    notifyListeners();
   }
 
   Future<void> addMemo(String memo) async {
